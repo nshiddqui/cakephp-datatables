@@ -69,8 +69,8 @@ final class Columns {
 	 * @param int|null $index Position to insert new column.
 	 * @return \DataTables\Table\Column
 	 */
-	public function addDatabaseColumn(string $dataBaseField, ?int $index = null): Column {
-		$columnInfo = $this->normalizeDataTableField($dataBaseField);
+	public function addDatabaseColumn(string $dataBaseField, ?string $associationPath = null, ?int $index = null): Column {
+		$columnInfo = $this->normalizeDataTableField($dataBaseField, $associationPath);
 		$column = new Column("{$columnInfo['table']}.{$columnInfo['column']}", true, $columnInfo['columnSchema'], $columnInfo['associationPath']);
 
 		return $this->saveColumn($column, $index);
@@ -282,7 +282,7 @@ final class Columns {
 	 * @param string $dataBaseField
 	 * @return array
 	 */
-	public function normalizeDataTableField(string $dataBaseField): array {
+	public function normalizeDataTableField(string $dataBaseField, ?string $associationPath = null): array {
 		$ormTable = $this->getConfigBundle()->getDataTables()->getOrmTable();
 		$explodedDataBaseField = explode('.', $dataBaseField);
 		if (count($explodedDataBaseField) === 2) {
@@ -294,9 +294,11 @@ final class Columns {
 		} else {
 			throw new InvalidArgumentException("$dataBaseField is a invalid \$dataBaseField.");
 		}
-		$associationPath = Functions::getInstance()->getAssociationPath($ormTable, $table);
-		if ($associationPath === false) {
-			throw new InvalidArgumentException("The table '$table' isn't associated with '" . $ormTable->getAlias() . "' or with its associations.");
+		if(!$associationPath) {
+			$associationPath = Functions::getInstance()->getAssociationPath($ormTable, $table);
+			if ($associationPath === false) {
+				throw new InvalidArgumentException("The table '$table' isn't associated with '" . $ormTable->getAlias() . "' or with its associations.");
+			}
 		}
 		$association = Functions::getInstance()->getAssociationUsingPath($ormTable, $associationPath);
 		if (!$association->getSchema()->hasColumn($column)) {
