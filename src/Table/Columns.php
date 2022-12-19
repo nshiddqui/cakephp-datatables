@@ -247,7 +247,11 @@ final class Columns {
 	 * @return string
 	 */
 	public function getColumnNameByIndex(int $index): string {
-		return $this->getColumnByIndex($index)->getName();
+		$column = $this->getColumnByIndex($index);
+		if(!empty($column->getFunctionExpression())){
+			return $column->getFunctionExpression()->sql((new ValueBinder));
+		}
+		return $column->getName();
 	}
 
 	/**
